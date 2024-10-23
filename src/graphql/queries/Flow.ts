@@ -112,6 +112,14 @@ export const RELEASE_FLOW = gql`
     }
   }
 `;
+export const TRANSFER_OWNERSHIP = gql`
+  query transferOwnership {
+    transferOwnership {
+      id
+      uuid
+    }
+  }
+`;
 
 export const EXPORT_FLOW_LOCALIZATIONS = gql`
   query exportFlowLocalization($id: ID!, $addTranslation: Boolean) {

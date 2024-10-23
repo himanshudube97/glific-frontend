@@ -13,7 +13,7 @@ import Simulator from 'components/simulator/Simulator';
 import { DialogBox } from 'components/UI/DialogBox/DialogBox';
 import { setErrorMessage, setNotification } from 'common/notification';
 import { PUBLISH_FLOW, RESET_FLOW_COUNT } from 'graphql/mutations/Flow';
-import { EXPORT_FLOW, GET_FLOW_DETAILS, GET_FREE_FLOW } from 'graphql/queries/Flow';
+import { EXPORT_FLOW, GET_FLOW_DETAILS, GET_FREE_FLOW, TRANSFER_OWNERSHIP } from 'graphql/queries/Flow';
 import { getUserSession, setAuthHeaders } from 'services/AuthService';
 import { Loading } from 'components/UI/Layout/Loading/Loading';
 import Track from 'services/TrackService';
@@ -70,6 +70,7 @@ export const FlowEditor = () => {
     setLoading(false);
   };
 
+  // this is an api call.
   const [getFreeFlowForced] = useLazyQuery(GET_FREE_FLOW, {
     fetchPolicy: 'network-only',
     onCompleted: () => {
@@ -101,6 +102,21 @@ export const FlowEditor = () => {
       const parsedData = JSON.parse(data.data.sendRevisionAlert);
       if(  parsedData.user_id != userId.id ){
         loadFlowEditor();
+      }
+    },
+    onError:(x)=>{
+      console.log(x, "err")
+    },
+  });
+  useSubscription(TRANSFER_OWNERSHIP, {
+    fetchPolicy: 'network-only',
+    variables,
+    onData: ({ data }:any) => {
+      const parsedData = JSON.parse(data.data.sendRevisionAlert);
+      if(  parsedData.user_id != userId.id ){
+      //hello
+      getFreeFlowForced({ variables: { id: flowId, isForced: true } });
+
       }
     },
     onError:(x)=>{
@@ -267,6 +283,11 @@ export const FlowEditor = () => {
     publishFlow({ variables: { uuid: params.uuid } });
   };
 
+  const [transferOwnership] = useLazyQuery(TRANSFER_OWNERSHIP);
+  const handleReleaseApi = ()=>{
+      transferOwnership();
+  }
+
   const handleCancelFlow = () => {
     setPublishDialog(false);
     setIsError(false);
@@ -312,26 +333,27 @@ export const FlowEditor = () => {
   if (publishDialog) {
     dialog = (
       <DialogBox
-        title="Ready to publish?"
-        buttonOk="Publish & stay"
+        title="Ready to Transfer Ownership?"
+        buttonOk="Transfer Ownership"
         titleAlign="center"
-        buttonOkLoading={publishLoading}
-        buttonMiddle="Publish & go back"
+        // buttonOkLoading={publishLoading}
+        // buttonMiddle="Publish & go back"
         handleOk={() => {
-          setPublishLoading(true);
-          setStayOnPublish(true);
-          handlePublishFlow();
+          // setPublishLoading(true);
+          // setStayOnPublish(true);
+          // handlePublishFlow();
+          handleReleaseApi();
         }}
         handleCancel={() => handleCancelFlow()}
-        handleMiddle={() => {
-          setStayOnPublish(false);
-          handlePublishFlow();
-        }}
+        // handleMiddle={() => {
+        //   // setStayOnPublish(false);
+        //   // handlePublishFlow();
+        // }}
         alignButtons="center"
         buttonCancel="Cancel"
         additionalTitleStyles={styles.PublishDialogTitle}
       >
-        <p className={styles.DialogDescription}>New changes will be activated for the users</p>
+        <p className={styles.DialogDescription}>The Ownership to edit the flow will be transfered to the other user.</p>
       </DialogBox>
     );
   }
@@ -355,14 +377,14 @@ export const FlowEditor = () => {
     );
   }
 
-  if (published && !IsError) {
-    setNotification('The flow has been published');
-    if (!stayOnPublish) {
-      return <Navigate to="/flow" />;
-    }
-    setPublishDialog(false);
-    setPublished(false);
-  }
+  // if (published && !IsError) {
+  //   setNotification('The flow has been published');
+  //   if (!stayOnPublish) {
+  //     return <Navigate to="/flow" />;
+  //   }
+  //   setPublishDialog(false);
+  //   setPublished(false);
+  // }
 
   const getFlowKeyword = () => {
     const flows = flowName ? flowName.flows : null;
@@ -475,6 +497,15 @@ export const FlowEditor = () => {
           >
             <PublishIcon className={styles.Icon} />
             Publish
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            data-testid="button"
+            disabled={isTemplate}
+            onClick={() => setPublishDialog(true)}
+          >
+            TRANSFER
           </Button>
         </div>
       </div>

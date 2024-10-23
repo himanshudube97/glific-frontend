@@ -22,3 +22,8 @@ export const SEND_REVISION_ALERT = gql`
     sendRevisionAlert(organizationId: $organizationId)
   }
 `;
+export const TRANSFER_OWNERSHIP = gql`
+  subscription ($organizationId: ID!) {
+    transferOwnership(organizationId: $organizationId)
+  }
+`;
