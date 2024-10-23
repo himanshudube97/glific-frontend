@@ -17,3 +17,8 @@ export const SIMULATOR_RELEASE_SUBSCRIPTION = gql`
     simulatorRelease(organizationId: $organizationId)
   }
 `;
+export const SEND_REVISION_ALERT = gql`
+  subscription ($organizationId: ID!) {
+    sendRevisionAlert(organizationId: $organizationId)
+  }
+`;

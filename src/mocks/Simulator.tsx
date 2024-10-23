@@ -168,3 +168,13 @@ export const messageSendSubscription = (variables: any = { organizationId: '1' }
     data: messageSubscriptionData,
   },
 });
+
+export const sendRevisionAlert = (variables: any = { organizationId: '1' }) => ({
+  request: {
+    query: SIMULATOR_MESSAGE_SENT_SUBSCRIPTION,
+    variables,
+  },
+  result: {
+    data: messageSubscriptionData,
+  },
+});

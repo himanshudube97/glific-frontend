@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useLazyQuery, useQuery } from '@apollo/client';
+import { useMutation, useLazyQuery, useQuery, useSubscription } from '@apollo/client';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Menu, MenuItem, Typography } from '@mui/material';
 import BackIconFlow from 'assets/images/icons/BackIconFlow.svg?react';
@@ -14,7 +14,7 @@ import { DialogBox } from 'components/UI/DialogBox/DialogBox';
 import { setErrorMessage, setNotification } from 'common/notification';
 import { PUBLISH_FLOW, RESET_FLOW_COUNT } from 'graphql/mutations/Flow';
 import { EXPORT_FLOW, GET_FLOW_DETAILS, GET_FREE_FLOW } from 'graphql/queries/Flow';
-import { setAuthHeaders } from 'services/AuthService';
+import { getUserSession, setAuthHeaders } from 'services/AuthService';
 import { Loading } from 'components/UI/Layout/Loading/Loading';
 import Track from 'services/TrackService';
 import { exportFlowMethod } from 'common/utils';
@@ -22,6 +22,7 @@ import styles from './FlowEditor.module.css';
 import { checkElementInRegistry, loadfiles, setConfig } from './FlowEditor.helper';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { BackdropLoader, FlowTranslation } from 'containers/Flow/FlowTranslation';
+import { SEND_REVISION_ALERT } from 'graphql/subscriptions/PeriodicInfo';
 
 declare function showFlowEditor(node: any, config: any): void;
 
@@ -47,7 +48,9 @@ export const FlowEditor = () => {
   const [publishLoading, setPublishLoading] = useState(false);
   const [isTemplate, setIsTemplate] = useState(false);
   const config = setConfig(uuid, isTemplate);
-
+  //change this make this commmon ->
+  const variables = { organizationId: getUserSession('organizationId') };
+  const userId = {id: getUserSession("id")};
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -88,6 +91,20 @@ export const FlowEditor = () => {
         }
         setCurrentEditDialogBox(true);
       }
+    },
+  });
+
+  useSubscription(SEND_REVISION_ALERT, {
+    fetchPolicy: 'network-only',
+    variables,
+    onData: ({ data }:any) => {
+      const parsedData = JSON.parse(data.data.sendRevisionAlert);
+      if(  parsedData.user_id != userId.id ){
+        loadFlowEditor();
+      }
+    },
+    onError:(x)=>{
+      console.log(x, "err")
     },
   });
 

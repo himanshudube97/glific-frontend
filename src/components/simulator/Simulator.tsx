@@ -199,7 +199,7 @@ const Simulator = ({
       });
     setInputMessage('');
   };
-
+//himanshu
   useSubscription(SIMULATOR_RELEASE_SUBSCRIPTION, {
     fetchPolicy: 'network-only',
     variables,
