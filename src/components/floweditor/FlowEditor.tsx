@@ -82,6 +82,10 @@ export const FlowEditor = () => {
         setFlowEditorLoaded(true);
       } else if (flowGet.errors && flowGet.errors.length) {
         setDialogMessage(flowGet.errors[0].message);
+        const ifViewClicked = localStorage.getItem('clickedView');
+        if (ifViewClicked === 'true') {
+          return;
+        }
         setCurrentEditDialogBox(true);
       }
     },
@@ -152,6 +156,19 @@ export const FlowEditor = () => {
   const handleResetFlowCount = () => {
     resetFlowCountMethod({ variables: { flowId } });
   };
+
+  useEffect(() => {
+    const handleUnload = () => {
+      localStorage.removeItem('clickedView');
+    };
+
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      handleUnload();
+    };
+  }, []);
 
   if (showResetFlowModal) {
     modal = (
@@ -256,10 +273,12 @@ export const FlowEditor = () => {
         title={dialogMessage}
         alignButtons="center"
         skipCancel
-        buttonOk="Take Over"
+        buttonOk="View"
         buttonMiddle="Go Back"
         handleOk={() => {
-          getFreeFlowForced({ variables: { id: flowId, isForced: true } });
+          getFreeFlowForced({ variables: { id: flowId, isForced: false } });
+          localStorage.setItem('clickedView', 'true');
+          setIsTemplate(true);
           setCurrentEditDialogBox(false);
         }}
         handleMiddle={() => {
@@ -267,8 +286,7 @@ export const FlowEditor = () => {
         }}
       >
         <p className={styles.DialogDescription}>
-          You can either go back and edit it later or <br /> &lsquo;Take Over&rsquo; this flow to
-          start editing now.
+          You can either go back or you can view the flow <br /> 
         </p>
       </DialogBox>
     );
